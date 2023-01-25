@@ -49,6 +49,7 @@ namespace OAuth2Client
             this.Controls.Add(this.authWindow);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "OAuth2ClientForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Authorization Client";
             this.ResumeLayout(false);
 

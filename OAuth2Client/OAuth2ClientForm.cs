@@ -14,13 +14,15 @@ namespace OAuth2Client
     public partial class OAuth2ClientForm : Form
     {
         static readonly HttpClient client = new HttpClient();
-        string AuthorizationURL;
+        public string Code;
 
-        public OAuth2ClientForm() { InitializeComponent(); }
+        private OAuth2ClientForm() { InitializeComponent(); }
 
-        public OAuth2ClientForm(string authorizationURL) : base()
+        public OAuth2ClientForm(string authorizationURL) 
         {
-            AuthorizationURL = authorizationURL;
+            InitializeComponent();
+            MessageBox.Show(authorizationURL);
+            this.authWindow.Navigate(authorizationURL);
         }
     }
 }
