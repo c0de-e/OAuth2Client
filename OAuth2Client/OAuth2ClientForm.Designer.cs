@@ -40,6 +40,7 @@ namespace OAuth2Client
             this.authWindow.Name = "authWindow";
             this.authWindow.Size = new System.Drawing.Size(800, 450);
             this.authWindow.TabIndex = 0;
+            this.authWindow.NavigationCompleted += new System.EventHandler<Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT.WebViewControlNavigationCompletedEventArgs>(this.authWindow_NavigationCompleted);
             // 
             // OAuth2ClientForm
             // 

@@ -76,35 +76,30 @@ namespace OAuth2Client
             return this;
         }
 
-        public Credentials Build()
+        public async Task<Credentials> Build()
         {
             List<string> errors = new List<string>();
             if (AuthorizationBaseURL == null) errors.Add("AuthorizationBaseURL");
+            if (RedirectURI == null) errors.Add("redirect_uri");
             if (TokenURL == null) errors.Add("TokenURL");
             if (ClientID == null) errors.Add("client_id");
             if (ClientSecret == null) errors.Add("client_secret");
             if (errors.Count > 0)
                 throw new Exception($"Must include {string.Join(", ", errors)}");
 
-            StartClientForm();
-            return this.Credentials;
+            return await StartClientForm();
         }
 
-        private async void StartClientForm()
+        private async Task<Credentials> StartClientForm()
         {
-            try
+            string authURL = await GetAuthorizationURL();
+            using (var clientForm = new OAuth2ClientForm(authURL))
             {
-                string authURL = await GetAuthorizationURL();
-                using (var clientForm = new OAuth2ClientForm(authURL))
-                {
-                    clientForm.ShowDialog();
-                    if (clientForm.DialogResult == DialogResult.OK)
-                    {
-                        Credentials = await ExchangeCodeForToken(clientForm.Code);
-                    }
-                }
+                clientForm.ShowDialog();
+                if (clientForm.DialogResult == DialogResult.OK)
+                    Credentials = await ExchangeCodeForToken(clientForm.Code);
             }
-            catch (Exception e) { MessageBox.Show(e.ToString()); }
+            return this.Credentials;
         }
 
         private async Task<string> GetAuthorizationURL()
@@ -128,7 +123,7 @@ namespace OAuth2Client
 
         private async Task<Credentials> ExchangeCodeForToken(string code)
         {
-            string res = string.Empty; ;
+            string res = string.Empty;
             var body = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("client_id", ClientID),
@@ -137,8 +132,7 @@ namespace OAuth2Client
                 new KeyValuePair<string, string>("redirect_uri", RedirectURI),
                 new KeyValuePair<string, string>("code", code)
             };
-            // TODO add params and scope
-            //body.AddRange()
+
             using (HttpResponseMessage response = await client.PostAsync(TokenURL, new FormUrlEncodedContent(body)))
             {
                 res = await response.Content.ReadAsStringAsync();
