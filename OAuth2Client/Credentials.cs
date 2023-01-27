@@ -11,9 +11,13 @@ namespace OAuth2Client
         public string refresh_token;
         public string scope;
 
-        public int SecondsUntilExpiration => (expires_in - DateTime.Now.Second - bufferSeconds);
-        public bool IsExpired => (expires_in - DateTime.Now.Second - bufferSeconds) <= 0;
+        public int SecondsUntilExpiration => (int)(expires_in - (DateTime.Now - timeCreated).TotalSeconds - bufferSeconds);
+        public bool IsExpired => ((int)(expires_in - (DateTime.Now - timeCreated).TotalSeconds - bufferSeconds)) <= 0;
+       
+        private readonly DateTime timeCreated;
         private readonly int bufferSeconds = 10;
+
+        public Credentials() { timeCreated = DateTime.Now; }
 
         public override string ToString() { return JsonConvert.SerializeObject(this, Formatting.Indented); }
     }
