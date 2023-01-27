@@ -42,10 +42,7 @@ namespace OAuth2Client
             AuthorizationBaseURL = url;
             return this;
         }
-        public static void ShowAssemblyVersion()
-        {
-            MessageBox.Show(Assembly.GetExecutingAssembly().GetName().Version.ToString());
-        }
+
         public Client SetTokenURL(string url)
         {
             TokenURL = url;
@@ -177,6 +174,11 @@ namespace OAuth2Client
                 res = await response.Content.ReadAsStringAsync();
             }
             return JsonConvert.DeserializeObject<Credentials>(res);
+        }
+
+        public static void ShowAssemblyVersion()
+        {
+            MessageBox.Show(Assembly.GetExecutingAssembly().GetName().Version.ToString());
         }
     }
 }
