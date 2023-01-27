@@ -11,6 +11,7 @@ namespace OAuth2Client
         public string refresh_token;
         public string scope;
 
+        public int SecondsUntilExpiration => (expires_in - DateTime.Now.Second - bufferSeconds);
         public bool IsExpired => (expires_in - DateTime.Now.Second - bufferSeconds) <= 0;
         private readonly int bufferSeconds = 10;
 
