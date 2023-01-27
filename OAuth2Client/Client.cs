@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
+using System.Reflection;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using Newtonsoft.Json;
-using Windows.Media.Protection.PlayReady;
 
 namespace OAuth2Client
 {
@@ -14,6 +13,7 @@ namespace OAuth2Client
     {
         public string AuthorizationBaseURL;
         public string TokenURL;
+        public string RefreshURL;
         public string ClientID;
         public string ClientSecret;
         public string RedirectURI;
@@ -22,57 +22,76 @@ namespace OAuth2Client
         public string[] Params;
         public string GrantType;
 
-        public Credentials Credentials;
         static readonly HttpClient client = new HttpClient();
 
-        public Client() { GrantType = "authorization_code"; }
+        private Credentials credentials;
+        public Credentials Credentials
+        {
+            get
+            {
+                if (credentials == null) throw new FieldAccessException("Please initialize credentials before attempting to access.");
+                if (credentials.IsExpired)
+                    credentials = Task.Run(() => GetRefreshToken(credentials.refresh_token)).Result;
+                return credentials;
+            }
+            set { credentials = value; }
+        }
 
         public Client SetAuthorizationBaseURL(string url)
         {
-            this.AuthorizationBaseURL = url;
+            AuthorizationBaseURL = url;
+            return this;
+        }
+        public static void ShowAssemblyVersion()
+        {
+            MessageBox.Show(Assembly.GetExecutingAssembly().GetName().Version.ToString());
+        }
+        public Client SetTokenURL(string url)
+        {
+            TokenURL = url;
             return this;
         }
 
-        public Client SetTokenURL(string url)
+        public Client SetRefreshURL(string url)
         {
-            this.TokenURL = url;
+            RefreshURL = url;
             return this;
         }
 
         public Client SetClientID(string client_id)
         {
-            this.ClientID = client_id;
+            ClientID = client_id;
             return this;
         }
 
         public Client SetClientSecret(string client_secret)
         {
-            this.ClientSecret = client_secret;
+            ClientSecret = client_secret;
             return this;
         }
 
         public Client SetRedirectURI(string redirect_uri)
         {
-            this.RedirectURI = redirect_uri;
+            RedirectURI = redirect_uri;
             return this;
         }
 
         public Client SetScope(string[] scope, string seperator = " ")
         {
-            this.Scope = scope;
-            this.ScopeSeperator = seperator;
+            Scope = scope;
+            ScopeSeperator = seperator;
             return this;
         }
 
         public Client SetParams(string[] param)
         {
-            this.Params = param;
+            Params = param;
             return this;
         }
 
-        public Client SetGrantType(string grant_type)
+        private Client SetGrantType(string grant_type)
         {
-            this.GrantType = grant_type;
+            GrantType = grant_type;
             return this;
         }
 
@@ -93,13 +112,13 @@ namespace OAuth2Client
         private async Task<Credentials> StartClientForm()
         {
             string authURL = await GetAuthorizationURL();
-            using (var clientForm = new OAuth2ClientForm(authURL))
+            using (OAuth2ClientForm clientForm = new OAuth2ClientForm(authURL))
             {
                 clientForm.ShowDialog();
                 if (clientForm.DialogResult == DialogResult.OK)
                     Credentials = await ExchangeCodeForToken(clientForm.Code);
             }
-            return this.Credentials;
+            return Credentials;
         }
 
         private async Task<string> GetAuthorizationURL()
@@ -124,6 +143,7 @@ namespace OAuth2Client
         private async Task<Credentials> ExchangeCodeForToken(string code)
         {
             string res = string.Empty;
+            SetGrantType("authorization_code");
             var body = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("client_id", ClientID),
@@ -134,6 +154,25 @@ namespace OAuth2Client
             };
 
             using (HttpResponseMessage response = await client.PostAsync(TokenURL, new FormUrlEncodedContent(body)))
+            {
+                res = await response.Content.ReadAsStringAsync();
+            }
+            return JsonConvert.DeserializeObject<Credentials>(res);
+        }
+
+        private async Task<Credentials> GetRefreshToken(string refresh_token)
+        {
+            string res = string.Empty;
+            SetGrantType("refresh_token");
+            var body = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("client_id", ClientID),
+                new KeyValuePair<string, string>("client_secret", ClientSecret),
+                new KeyValuePair<string, string>("grant_type", GrantType),
+                new KeyValuePair<string, string>("refresh_token", refresh_token),
+            };
+
+            using (HttpResponseMessage response = await client.PostAsync(RefreshURL, new FormUrlEncodedContent(body)))
             {
                 res = await response.Content.ReadAsStringAsync();
             }

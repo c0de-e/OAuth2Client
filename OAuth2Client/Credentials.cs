@@ -1,17 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace OAuth2Client
 {
-    public struct Credentials
+    public class Credentials
     {
         public string access_token;
         public string token_type;
-        public string expires_in;
+        public int expires_in;
         public string refresh_token;
         public string scope;
+
+        public bool IsExpired => (expires_in - DateTime.Now.Second - bufferSeconds) <= 0;
+        private readonly int bufferSeconds = 10;
+
+        public override string ToString() { return JsonConvert.SerializeObject(this, Formatting.Indented); }
     }
 }
