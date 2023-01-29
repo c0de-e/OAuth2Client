@@ -11,16 +11,16 @@ namespace OAuth2Client
 {
     public class Client
     {
-        public string AuthorizationBaseURL;
-        public string TokenURL;
-        public string RefreshURL;
-        public string ClientID;
-        public string ClientSecret;
-        public string RedirectURI;
-        public string[] Scope;
-        public string ScopeSeperator;
-        public string[] Params;
-        public string GrantType;
+        private string AuthorizationBaseURL;
+        private string TokenURL;
+        private string RefreshURL;
+        private string ClientID;
+        private string ClientSecret;
+        private string RedirectURI;
+        private string[] Scope;
+        private string ScopeSeperator;
+        private List<string> Params;
+        private string GrantType;
 
         static readonly HttpClient client = new HttpClient();
 
@@ -37,6 +37,9 @@ namespace OAuth2Client
             set { credentials = value; }
         }
 
+        /// <summary> Sets the clients's authorization base URL (required) </summary>
+        /// <param name="url"> The authorization endpoint base URL </param>
+        /// <returns> The current client, for chaining </returns>
         public Client SetAuthorizationBaseURL(string url)
         {
             AuthorizationBaseURL = url;
@@ -80,9 +83,10 @@ namespace OAuth2Client
             return this;
         }
 
-        public Client SetParams(string[] param)
+        public Client SetParam(string param)
         {
-            Params = param;
+            if (Params == null) Params = new List<string>();
+            Params.Add(param);
             return this;
         }
 
