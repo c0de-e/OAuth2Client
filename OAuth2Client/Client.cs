@@ -19,7 +19,7 @@ namespace OAuth2Client
         private string RedirectURI;
         private string[] Scope;
         private string ScopeSeperator;
-        private List<string> Params;
+        private List<KeyValuePair<string, string>> AdditionalParams;
         private string GrantType;
 
         static readonly HttpClient client = new HttpClient();
@@ -83,10 +83,10 @@ namespace OAuth2Client
             return this;
         }
 
-        public Client SetParam(string param)
+        public Client SetParam(string param, string value)
         {
-            if (Params == null) Params = new List<string>();
-            Params.Add(param);
+            if (AdditionalParams == null) AdditionalParams = new List<KeyValuePair<string, string>>();
+            AdditionalParams.Add(new KeyValuePair<string, string>(param, value));
             return this;
         }
 
@@ -113,6 +113,7 @@ namespace OAuth2Client
         private async Task<Credentials> StartClientForm()
         {
             string authURL = await GetAuthorizationURL();
+            MessageBox.Show(authURL);
             using (OAuth2ClientForm clientForm = new OAuth2ClientForm(authURL))
             {
                 clientForm.ShowDialog();
@@ -136,8 +137,8 @@ namespace OAuth2Client
 
             var extraParams = new List<KeyValuePair<string, string>> { };
             if (Scope != null) extraParams.Add(new KeyValuePair<string, string>("scope", string.Join(ScopeSeperator, Scope)));
+            if (AdditionalParams != null) extraParams.AddRange(AdditionalParams);
             if (extraParams.Count > 0) url += "&" + await new FormUrlEncodedContent(extraParams).ReadAsStringAsync();
-
             return url;
         }
 
