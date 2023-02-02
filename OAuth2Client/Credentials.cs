@@ -12,7 +12,7 @@ namespace OAuth2Client
         public string scope;
 
         public int SecondsUntilExpiration => (int)(expires_in - (DateTime.Now - timeCreated).TotalSeconds - bufferSeconds);
-        public bool IsExpired => ((int)(expires_in - (DateTime.Now - timeCreated).TotalSeconds - bufferSeconds)) <= 0;
+        public bool IsExpired => SecondsUntilExpiration <= 0;
        
         private readonly DateTime timeCreated;
         private readonly int bufferSeconds = 10;
